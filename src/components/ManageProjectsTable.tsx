@@ -170,6 +170,9 @@ export default function ManageBuyersTable({
   const [searchTerm, setSearchTerm] = useState(
     initialSearchParams?.search || searchParams.get("search") || ""
   );
+  const [actualSearchTerm, setActualSearchTerm] = useState(
+    initialSearchParams?.search || searchParams.get("search") || ""
+  );
   const [cityFilter, setCityFilter] = useState(
     initialSearchParams?.city || searchParams.get("city") || "all"
   );
@@ -187,8 +190,17 @@ export default function ManageBuyersTable({
   const [sortField, setSortField] = useState<keyof Buyer>("updatedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  // Debounced search term
-  const debouncedSearchTerm = useDebounceHook(searchTerm, 300);
+  // Handle search on Enter key press
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setActualSearchTerm(searchTerm);
+    }
+  };
+
+  // Handle search button click
+  const handleSearchClick = () => {
+    setActualSearchTerm(searchTerm);
+  };
 
   // Clean up invalid URL parameters on mount
   useEffect(() => {
@@ -254,7 +266,7 @@ export default function ManageBuyersTable({
   // Fetch buyers from API with SSR pagination
   const fetchBuyers = async (
     page: number = pagination.currentPage,
-    search: string = debouncedSearchTerm,
+    search: string = actualSearchTerm,
     city: string = cityFilter === 'all' ? '' : cityFilter,
     status: string = statusFilter === 'all' ? '' : statusFilter,
     propertyType: string = propertyTypeFilter === 'all' ? '' : propertyTypeFilter
@@ -310,7 +322,7 @@ export default function ManageBuyersTable({
   // Refetch when filters change
   useEffect(() => {
     fetchBuyers(1); // Reset to page 1 when filters change
-  }, [debouncedSearchTerm, cityFilter, statusFilter, propertyTypeFilter, timelineFilter]);
+  }, [actualSearchTerm, cityFilter, statusFilter, propertyTypeFilter, timelineFilter]);
 
   // Calculate task counts from actual data or use provided ones
   const actualTaskCounts = useMemo(() => {
@@ -419,14 +431,15 @@ export default function ManageBuyersTable({
   }
 
   // No buyers at all (check total count, not current page)
-  if (pagination.totalCount === 0 && !debouncedSearchTerm && cityFilter === 'all' && statusFilter === 'all' && propertyTypeFilter === 'all') {
+  if (pagination.totalCount === 0 && !actualSearchTerm && cityFilter === 'all' && statusFilter === 'all' && propertyTypeFilter === 'all') {
     return <BuyersEmptyState onAddBuyer={() => router.push('/buyers/new')} />;
   }
 
   // No results after filtering (has filters but no results)
-  if (pagination.totalCount === 0 && (debouncedSearchTerm || cityFilter !== 'all' || statusFilter !== 'all' || propertyTypeFilter !== 'all')) {
+  if (pagination.totalCount === 0 && (actualSearchTerm || cityFilter !== 'all' || statusFilter !== 'all' || propertyTypeFilter !== 'all')) {
     return <SearchEmptyState onClearFilters={() => {
       setSearchTerm('');
+      setActualSearchTerm('');
       setCityFilter('all');
       setPropertyTypeFilter('all');
       setStatusFilter('all');
@@ -495,12 +508,24 @@ export default function ManageBuyersTable({
 
         {/* Search and Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4 relative">
-          <Input
-            placeholder="Search by name, phone, email..."
-            className="bg-zinc-700 text-zinc-300 border-zinc-600 placeholder-zinc-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              placeholder="Search by name, phone, email... (Press Enter)"
+              className="bg-zinc-700 text-zinc-300 border-zinc-600 placeholder-zinc-500 pr-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-zinc-400 hover:text-zinc-200"
+              onClick={handleSearchClick}
+              type="button"
+            >
+              🔍
+            </Button>
+          </div>
 
           <Select value={cityFilter || "all"} onValueChange={setCityFilter}>
             <SelectTrigger className="bg-zinc-700 text-zinc-300 border-zinc-600">
