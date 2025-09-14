@@ -1,4 +1,22 @@
 import { buyerSchema } from '../validations/buyer';
+import { z } from 'zod';
+
+interface CSVRow {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  propertyType?: string;
+  bhk?: string;
+  purpose?: string;
+  budgetMin?: string;
+  budgetMax?: string;
+  timeline?: string;
+  source?: string;
+  notes?: string;
+  tags?: string;
+  status?: string;
+}
 
 export interface CSVValidationResult {
   isValid: boolean;
@@ -7,11 +25,11 @@ export interface CSVValidationResult {
     field: string;
     message: string;
   }>;
-  validRows: any[];
-  invalidRows: any[];
+  validRows: CSVRow[];
+  invalidRows: CSVRow[];
 }
 
-export function validateCSVRow(row: any, rowNumber: number): { isValid: boolean; errors: Array<{ row: number; field: string; message: string }> } {
+export function validateCSVRow(row: CSVRow, rowNumber: number): { isValid: boolean; errors: Array<{ row: number; field: string; message: string }> } {
   const errors: Array<{ row: number; field: string; message: string }> = [];
   
   try {
@@ -36,7 +54,7 @@ export function validateCSVRow(row: any, rowNumber: number): { isValid: boolean;
     const result = buyerSchema.safeParse(processedRow);
     
     if (!result.success) {
-      result.error.issues.forEach((error: any) => {
+      result.error.issues.forEach((error: z.ZodIssue) => {
         errors.push({
           row: rowNumber,
           field: error.path.join('.'),
@@ -63,10 +81,10 @@ export function validateCSVRow(row: any, rowNumber: number): { isValid: boolean;
   }
 }
 
-export function validateCSVData(csvData: any[]): CSVValidationResult {
+export function validateCSVData(csvData: CSVRow[]): CSVValidationResult {
   const allErrors: Array<{ row: number; field: string; message: string }> = [];
-  const validRows: any[] = [];
-  const invalidRows: any[] = [];
+  const validRows: CSVRow[] = [];
+  const invalidRows: CSVRow[] = [];
   
   csvData.forEach((row, index) => {
     const rowNumber = index + 1; // 1-based row numbering

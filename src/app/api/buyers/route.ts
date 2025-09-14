@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../utils/db';
-import { buyers } from '../../../utils/db/schema';
+import { buyers, type City, type Status, type PropertyType } from '../../../utils/db/schema';
 import { buyerSchema } from '../../../validations/buyer';
 import { auth } from '@clerk/nextjs/server';
 import { desc, ilike, eq, or, and, count } from 'drizzle-orm'; 
@@ -96,18 +96,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (city && validCities.includes(city)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      whereConditions.push(eq(buyers.city, city as any));
+      whereConditions.push(eq(buyers.city, city as City));
     }
 
     if (status && validStatuses.includes(status)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      whereConditions.push(eq(buyers.status, status as any));
+      whereConditions.push(eq(buyers.status, status as Status));
     }
 
     if (propertyType && validPropertyTypes.includes(propertyType)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      whereConditions.push(eq(buyers.propertyType, propertyType as any));
+      whereConditions.push(eq(buyers.propertyType, propertyType as PropertyType));
     }
 
     // Build where clause for filtering

@@ -10,7 +10,7 @@ export async function isUserAdmin(): Promise<boolean> {
     const userEmail = user.emailAddresses?.[0]?.emailAddress;
     
     return userEmail === process.env.ADMIN_EMAIL;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -23,7 +23,7 @@ export async function getUserEmail(): Promise<string | null> {
     const client = await clerkClient();
     const user = await client.users.getUser(userId);
     return user.emailAddresses?.[0]?.emailAddress || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
